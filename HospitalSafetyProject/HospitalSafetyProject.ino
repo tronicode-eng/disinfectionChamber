@@ -1,7 +1,7 @@
+
+
 /*-------------READ THIS-------------
-
   when push button set, if button clicked value of input should be zero
-
 */
 
 
@@ -30,6 +30,7 @@ unsigned const int sprayTime = 10000; //this time is used to spray
 unsigned const int motorInitializeTime = 5000;
 unsigned const int personExitTime = 5000; //this time varaibe is used to give a time for exiting
 const double maximumNoWorkingTime = 120000; // system waiting time for shutdowning
+unsigned const int motorFeedbackDelayTime = 2000; //this variable delay motor if wrong input is coming
 
 double  startTime;
 double endTime;
@@ -37,6 +38,7 @@ double endTime;
 //-----------------------------------------------
 boolean motorIsWorking = false;
 boolean flag = false;
+boolean motorDelayWithFeedback = true;
 
 int buttonClickedCount = 0;
 
@@ -60,9 +62,15 @@ void setup() {
   //switchOnMotor();
 
   startTime = millis();
+  motorDelayWithFeedback = true;
 }
 
 void loop() {
+  if (digitalRead(feedBackPin) == HIGH && motorDelayWithFeedback == true) {
+    delay(motorFeedbackDelayTime);
+    motorDelayWithFeedback = false;
+  }
+
   entranceButtonStatus = digitalRead(entranceButton);  // read input value
   //Serial.println(entranceButtonStatus);
 
@@ -77,6 +85,8 @@ void loop() {
   if (buttonClickedCount >= 5 ) {
     buttonClickedCount = 0;
 
+    motorDelayWithFeedback = true;
+
     buzzerTone();
     if (motorIsWorking == false && digitalRead(feedBackPin) == HIGH) { //motor has physically Off
       switchOnMotor(true);
@@ -84,7 +94,7 @@ void loop() {
     else if (motorIsWorking == false && digitalRead(feedBackPin) == LOW) { //motor has physically on
       switchOnMotor(false);
     }
-    
+
     digitalWrite(buttonClickIndicatingLight, HIGH);  // turn LED ON
     startTime = millis();
     sprayProcess();
